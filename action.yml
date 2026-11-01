@@ -1,6 +1,9 @@
-name: business-day
+name: Business calendars
 description: Say whether a day is a business day for a list of holiday calendars, so a job can run only on the eve of one
 author: Fizz Orange
+branding:
+  icon: calendar
+  color: blue
 
 inputs:
   calendars:
