@@ -21,9 +21,15 @@ import holidays
 
 
 def build(country, years):
+    # Name holidays in the country's own default language. Without an explicit
+    # language, python-holidays follows the machine's LANG, so two machines build
+    # different names for the same dates.
+    language = holidays.country_holidays(country).default_language
     days = {}
     for year in years:
-        for day, name in holidays.country_holidays(country, years=year, observed=True).items():
+        for day, name in holidays.country_holidays(
+            country, years=year, observed=True, language=language
+        ).items():
             days[day.isoformat()] = name
     return [{"date": d, "name": days[d]} for d in sorted(days)]
 
