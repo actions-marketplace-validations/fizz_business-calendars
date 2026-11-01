@@ -45,9 +45,12 @@ jobs:
             python3 scripts/compare.py ".old/$C.json" "$F" --label "${C^^}" || true
           done)
           LAST=$(git tag --list 'v*' --sort=-v:refname | head -1)
-          LAST=${LAST:-v0.0.0}
-          IFS=. read -r MAJ MIN PAT <<< "${LAST#v}"
-          NEXT="v$MAJ.$MIN.$((PAT + 1))"
+          if [ -z "$LAST" ]; then
+            NEXT=v0.1.0
+          else
+            IFS=. read -r MAJ MIN PAT <<< "${LAST#v}"
+            NEXT="v$MAJ.$MIN.$((PAT + 1))"
+          fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
