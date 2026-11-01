@@ -3,7 +3,7 @@
 Used for release notes (old vs new) and for cross-checking a calendar from one
 source against another, such as holidaydb against python-holidays.
 
-Usage: python3 scripts/compare.py OLD.json NEW.json [--label US]
+Usage: python scripts/compare.py OLD.json NEW.json [--label US]
 Exit 0 when the files agree, 1 when they differ.
 """
 

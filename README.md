@@ -55,13 +55,13 @@ Pin a commit SHA, not a tag. Dependabot's `github-actions` updater moves the pin
 ## Use it from the shell
 
 ```sh
-PYTHONPATH=src python3 -m business_calendars.cli --tz America/Chicago calendars/us.json
+PYTHONPATH=src python -m business_calendars.cli --tz America/Chicago calendars/us.json
 # 2026-11-02 business day          (exit 0)
 
-python3 -m business_calendars.cli --when 2027-03-22 calendars/us.json calendars/in.json
+python -m business_calendars.cli --when 2027-03-22 calendars/us.json calendars/in.json
 # 2027-03-22 Holi                  (exit 1)
 
-python3 -m business_calendars.cli --count 2026-11 calendars/us.json
+python -m business_calendars.cli --count 2026-11 calendars/us.json
 # 19
 ```
 
@@ -83,7 +83,7 @@ If the calendars live outside the module, add their directory to the plan workfl
 
 ```sh
 HOLIDAYDB_API_KEY=... uv run scripts/holidaydb.py calendars/us.json --country US
-python3 scripts/compare.py calendars/us.json /path/to/business-calendars/calendars/us.json --label US
+python scripts/compare.py calendars/us.json /path/to/business-calendars/calendars/us.json --label US
 ```
 
 `compare.py` prints the dates that the two sources do not agree on, and exits 1 when they differ. For 2026 and 2027, holidaydb and python-holidays have the same 27 US dates. Only five names are different, for example "Presidents' Day" and "Washington's Birthday".
@@ -91,7 +91,7 @@ python3 scripts/compare.py calendars/us.json /path/to/business-calendars/calenda
 ## Tests
 
 ```sh
-PYTHONPATH=src python3 -m unittest discover -s tests -v
+PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
 ## License

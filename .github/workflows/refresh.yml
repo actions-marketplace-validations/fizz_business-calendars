@@ -24,6 +24,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
 
       - name: Rebuild the calendars
@@ -42,7 +46,7 @@ jobs:
         run: |
           NOTES=$(for F in calendars/*.json; do
             C=$(basename "$F" .json)
-            python3 scripts/compare.py ".old/$C.json" "$F" --label "${C^^}" || true
+            python scripts/compare.py ".old/$C.json" "$F" --label "${C^^}" || true
           done)
           LAST=$(git tag --list 'v*' --sort=-v:refname | head -1)
           if [ -z "$LAST" ]; then
