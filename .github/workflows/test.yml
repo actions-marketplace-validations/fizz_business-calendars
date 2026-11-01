@@ -1,0 +1,33 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Unit tests
+        run: PYTHONPATH=src python3 -m unittest discover -s tests -v
+
+      - name: The action answers for a fixed day
+        id: day
+        uses: ./
+        with:
+          calendars: us
+          when: '2026-11-11'
+
+      - name: Check the action's answer
+        env:
+          BUSINESS: ${{ steps.day.outputs.business }}
+          REASON: ${{ steps.day.outputs.reason }}
+        run: |
+          test "$BUSINESS" = false
+          test "$REASON" = "Veterans Day"

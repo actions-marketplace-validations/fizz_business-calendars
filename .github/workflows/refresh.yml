@@ -1,0 +1,61 @@
+# Refresh: rebuild the calendars from python-holidays every day. Countries add holidays
+# in the middle of a year (Juneteenth was signed on 2021-06-17 and observed the next
+# day), so a yearly rebuild is too slow. When a calendar changes, commit it, tag the
+# next patch version and publish a release that lists the changed dates. Consumers
+# pin a commit SHA, and Dependabot brings them the bump.
+name: Refresh
+
+on:
+  schedule:
+    - cron: '23 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  COUNTRIES: US IN
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+
+      - name: Rebuild the calendars
+        id: build
+        run: |
+          mkdir -p .old
+          cp calendars/*.json .old/ 2>/dev/null || true
+          # shellcheck disable=SC2086
+          uv run scripts/build.py $COUNTRIES | tee build.log
+          if [ -s build.log ]; then echo "changed=true" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Commit, tag and release
+        if: steps.build.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES=$(for F in calendars/*.json; do
+            C=$(basename "$F" .json)
+            python3 scripts/compare.py ".old/$C.json" "$F" --label "${C^^}" || true
+          done)
+          LAST=$(git tag --list 'v*' --sort=-v:refname | head -1)
+          LAST=${LAST:-v0.0.0}
+          IFS=. read -r MAJ MIN PAT <<< "${LAST#v}"
+          NEXT="v$MAJ.$MIN.$((PAT + 1))"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add calendars/
+          git commit -m "Refresh the calendars" -m "$NOTES"
+          git tag -a "$NEXT" -m "$NEXT"
+          git push origin HEAD:main "$NEXT"
+
+          printf 'Calendars changed. Rebuilt from %s.\n\n%s\n\nA date added to the current month changes that month'"'"'s business-day count.\n' \
+            "$(tail -1 build.log | sed 's/.*(\(python-holidays [^,]*\).*/\1/')" "$NOTES" > notes.md
+          gh release create "$NEXT" --title "$NEXT: calendars" --notes-file notes.md

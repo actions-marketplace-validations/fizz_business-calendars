@@ -1,0 +1,59 @@
+name: business-day
+description: Say whether a day is a business day for a list of holiday calendars, so a job can run only on the eve of one
+author: Fizz Orange
+
+inputs:
+  calendars:
+    description: >-
+      Holiday calendar files, separated by spaces or new lines. A date in any of them is
+      a holiday. Paths are relative to the workspace; this action's own calendars are
+      under calendars/ in the action, for example "us" or "in" as a short name.
+    required: true
+  when:
+    description: tomorrow (default), today, or YYYY-MM-DD
+    default: tomorrow
+  tz:
+    description: Time zone that decides today and tomorrow, for example America/Chicago
+    default: UTC
+
+outputs:
+  business:
+    description: '"true" when the day is a business day, else "false"'
+    value: ${{ steps.check.outputs.business }}
+  date:
+    description: The day that was checked, YYYY-MM-DD
+    value: ${{ steps.check.outputs.date }}
+  reason:
+    description: '"business day", the weekday name, or the holiday name'
+    value: ${{ steps.check.outputs.reason }}
+
+runs:
+  using: composite
+  steps:
+    - id: check
+      shell: bash
+      env:
+        CALENDARS: ${{ inputs.calendars }}
+        WHEN: ${{ inputs.when }}
+        TZ_NAME: ${{ inputs.tz }}
+        ACTION_DIR: ${{ github.action_path }}
+      run: |
+        FILES=()
+        for C in $CALENDARS; do
+          if [ -f "$C" ]; then FILES+=("$C")
+          elif [ -f "$ACTION_DIR/calendars/$C.json" ]; then FILES+=("$ACTION_DIR/calendars/$C.json")
+          else echo "::error::no calendar file or built-in calendar named $C"; exit 2
+          fi
+        done
+        set +e
+        OUT=$(PYTHONPATH="$ACTION_DIR/src" python3 -m business_calendars.cli \
+          --tz "$TZ_NAME" --when "$WHEN" "${FILES[@]}")
+        RC=$?
+        set -e
+        echo "$OUT"
+        [ "$RC" -le 1 ] || exit "$RC"
+        {
+          echo "date=${OUT%% *}"
+          echo "reason=${OUT#* }"
+          echo "business=$([ "$RC" -eq 0 ] && echo true || echo false)"
+        } >> "$GITHUB_OUTPUT"

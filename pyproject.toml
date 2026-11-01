@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "business-calendars"
+version = "0.1.0"
+description = "Business days from holiday calendars that every tool in an estate shares"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Fizz Orange" }]
+dependencies = []
+
+[project.scripts]
+business-day = "business_calendars.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/business_calendars"]
